@@ -1,0 +1,221 @@
+---
+- name: Install Docker, Docker Compose, and Docker Swarm on Ubuntu 22.04
+  hosts: ubuntu_servers
+  become: yes
+
+  tasks:
+    - name: Update apt package cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install prerequisites
+      apt:
+        name: 
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - gnupg-agent
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker APT repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable"
+        state: present
+        update_cache: yes
+
+    - name: Update apt packages
+      # remote_user: ubuntu
+      apt:
+        update_cache: yes
+
+    - name: Install Docker
+      apt:
+        name: docker-ce
+        state: present
+        update_cache: yes
+
+    - name: Enable Docker and Docker Swarm service service
+      systemd:
+        name: docker
+        enabled: yes  # Ensure Docker service is enabled on system boot
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started  # Ensure Docker service is started
+
+    - name: Add remote "ubuntu" user to "docker" group
+      # remote_user: ubuntu
+      user:
+        name: "ubuntu"
+        groups: "docker"
+        append: yes
+      # tags:
+      # - docker
+
+    # command: >
+      #   curl -sSL https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose
+      # vars:
+      #   docker_compose_version: "1.29.2"  # Specify the version of Docker Compose you want to install
+
+    - name: Install Docker Compose
+      # remote_user: ubuntu
+      get_url: 
+        url : https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-Linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: 'u+x,g+x'
+      vars:
+        docker_compose_version: "v2.24.6"  # Specify the version of Docker Compose you want to install
+
+    - name: Enable Docker Compose service
+      systemd:
+        name: docker-compose
+        enabled: yes
+      become: yes
+
+    - name: Initialize Docker Swarm
+      command: docker swarm init
+      args:
+        creates: /root/.docker/config.json
+
+    - name: Get Docker Swarm join token for worker nodes
+      shell:
+        cmd: docker swarm join-token worker
+      register: swarm_join_token_output
+
+    - set_fact:
+        docker_swarm_join_command: "{{ swarm_join_token_output.stdout | regex_search('docker swarm join .*') | regex_replace('^docker swarm join', 'docker swarm join') }}"
+
+    - debug:
+        var: docker_swarm_join_command
+
+
+########
+- name: Install Docker, Docker Compose, and Docker Swarm and make private vm Join the cluster
+  tasks:
+    - name: Install Docker
+      become: yes
+      command: ssh -i ~/.ssh/tier3-ssh.pem ubuntu@10.0.2.159 'sudo apt update && sudo apt install -y docker.io'
+
+    - name: Install Docker Compose
+      become: yes
+      command: ssh -i ~/.ssh/tier3-ssh.pem ubuntu@10.0.2.159 'sudo curl -L "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose'
+      vars:
+        docker_compose_version: "v2.24.6"
+
+    - name: Initialize Docker Swarm
+      become: yes
+      command: ssh -i ~/.ssh/tier3-ssh.pem ubuntu@10.0.2.159 'sudo docker swarm init || true'
+
+    - name: Join Docker Swarm as worker
+      become: yes
+      command: ssh -i ~/.ssh/tier3-ssh.pem ubuntu@10.0.2.159 'sudo docker swarm join {{ docker_swarm_join_command }}'
+      vars:
+        docker_swarm_join_command: docker_swarm_join_command
+
+# docker run -it -d -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock dockersamples/visualizer
+
+# Run in a different context root
+# docker run -it -d -e CTX_ROOT=/visualizer -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock dockersamples/visualizer
+
+# docker service create --name nginweb -p 80:80 --replicas 2 nginx
+
+# docker node update --availability drain node3
+# docker node update --availability active node3
+
+services:
+
+  flaskapp:
+    image: jvsell/flaskapp
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 50M
+      restart_policy:
+        condition: on-failure
+      placement:
+        constriaints: [node.role == worker]
+    ports:
+      - 80:8080
+    networks:
+      - appnet
+
+  visualizer:
+    image: dockersamples/visualizer:stable
+    ports:
+      - 8081:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      placement:
+        constriaints: 
+          - node.role == manager
+    networks:
+      - appnet
+  httpd:
+    image: httpd:latest
+    command: httpd-foreground
+    volumes:
+      - httpd_data:/var/www/html
+    networks:
+      - network_public
+    environment:
+      VIRTUAL_HOST: httpd.paulo.dev
+      HTTP_PORT: 80
+      NOME: valor
+    deploy:
+      # Define a quantidade de replicas (Somente no modo replicated)
+      replicas: 2
+      # modo de deploy do serviço
+      mode: replicated # replicated ou global
+      placement:
+        constriaints:
+          - node.hostname == worker1
+          # - node.role == manager ## manager or worker
+          # Using labels
+          - node.labels.app == http 
+      resources:
+        limits:
+          cpus: 1 # 1 => 1 vCPU inteira
+          memory: 1024M # 1Gb de memória
+      labels:
+        - traefik.enable=true
+  hashura:
+    image: hashura/graphql-engine:latest
+    environment:
+      HASHURA_GRAPHQL_DATABASE_URI: postgres://postgres:@postgres:5432/postgres
+      HASHURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASHURA_GRAPHQL_ADMIN_SECRET: "true"
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constriaints:
+          - node.role == worker
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 256M
+    networks:
+      - appnet
+
+networks:
+  appnet:
+    driver: overlay
+    # external: true
+
+# docker stack deploy -d stack2.yaml appnet
+# docker service rm `docker service ls -q`
+# docker swarm leave
+# docker stack deploy -d stack2.yaml appnet ## UPDATE and distribute between machines
+# INSTALL PORTAINER
+# curl -L https://downloads.portainer.io/ce2-19/portainer-agent-stack.yml -o portainer-agent-stack.yml
+# docker stack deploy -c portainer-agent-stack.yml portainer
