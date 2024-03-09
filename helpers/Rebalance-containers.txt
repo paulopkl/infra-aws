@@ -1,0 +1,7 @@
+vim /etc/crontab
+*/5 * * * * docker service ls -q > dkr_svcs && for i in `cat dkr_svcs`; do docker service update "$i" --force ; done
+
+sudo docker service create --name=api --publish=80:80/tcp --constraint=node.role==worker  \
+  --mode=global \
+  msfidelis/example-api
+
