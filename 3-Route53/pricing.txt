@@ -1,0 +1,19 @@
+$0.50 per hosted zone / month for the first 25 hosted zones
+
+$0.40 per million queries – first 1 Billion queries / month
+
+$50.00 per policy record / month -> DNS (HTTPS)
+
+Data Transfer OUT From Amazon S3 To Internet
+First 10 TB / Month - $0.09 per GB
+
+1 Hosted Zone ->
+    -> $ 0.50
+    -> R$ 2.49
+
+Requests 1.000.000 / month:
+    -> $ 0.90
+    -> R$ 4.48
+
+Total USD: $ 1.40
+Total Real: R$ 6.97

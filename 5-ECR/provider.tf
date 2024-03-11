@@ -9,7 +9,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket =  "paulopkl-terraform-state"
+    bucket = "paulopkl-terraform-state"
     key    = "tfstate/ecr/terraform.tfstate" # "path/to/your/state/file.tfstate"
     region = "us-east-1"
     # You may specify other configurations like encryption, dynamodb table, etc.
@@ -17,6 +17,8 @@ terraform {
 }
 
 provider "aws" {
-  region  = var.aws_region
-  profile = var.aws_profile_name
+  region = var.aws_region
+  #   profile = var.aws_profile_name
+  access_key = var.aws_user_access_key
+  secret_key = var.aws_secret_access_key
 }

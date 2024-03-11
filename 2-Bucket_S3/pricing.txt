@@ -1,0 +1,58 @@
+Primeiros 50 TB/month	$ 0.023 / Gb
+Próximos 450 TB/month	$ 0.022 / Gb
+Mais de 500 TB/month	$ 0.021 / Gb
+
+Requests PUT, COPY, POST, LIST (por 1.000 solicitações) -> 0.005 USD
+Requests GET, SELECT e todas as outras (por 1.000 solicitações) -> 0.0004 USD
+
+Data Transfer OUT From Amazon S3 To Internet
+First 10 TB / Month - $0.09 per GB
+
+Store 100 Gb:
+    -> $ 2.30
+    -> R$ 11.45
+
+PUT, COPY, POST, LIST:
+    -> 30.000 Requests
+    -> $ 0.15
+    -> R$ 0.75
+
+GET, SELECT and others:
+    -> 70.000 Requests
+    -> $ 28.00
+    -> R$ 139.45
+
+Data transfer 100Gb:
+    -> $ 9.00
+    -> R$ 44.82
+
+
+Total USD: $ 37.15
+Total Real: R$ 185.02
+
+############################################################
+
+GET requests: GET requests are made when you retrieve an object from an S3 bucket.
+This could be when you download a file from an S3 bucket using the aws s3 cp command
+or when a user accesses a file stored in S3 via a web browser or application.
+
+PUT requests: These requests are made when you upload an object to an S3 bucket.
+For example, when you use the aws s3 cp command to copy a file to an S3 bucket,
+a PUT request is generated.
+
+DELETE requests: DELETE requests are made when you delete an object from an S3 bucket.
+This could be triggered by using the aws s3 rm command or through programmatic deletion.
+
+LIST requests: These requests are made when you list the objects within a bucket.
+For example, when you use the aws s3 ls command to list the contents of a bucket,
+LIST requests are generated.
+
+COPY requests: COPY requests occur when you copy an object from one location to another
+within the same bucket or between different buckets.
+
+POST requests: POST requests are typically used for form submissions or uploading
+data directly to S3 using HTML forms.
+
+HEAD requests: HEAD requests are similar to GET requests, but they only retrieve
+the object's metadata (e.g., size, content type) without retrieving the actual
+object content.

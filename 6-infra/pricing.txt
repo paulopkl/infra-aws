@@ -1,0 +1,15 @@
+0.10 USD por Gb/mês para dados armazenados em repositórios privados ou públicos.
+
+Data transfer OUTPUT
+Next 9,999 TB/month = 0.09 USD / Gb
+
+Store 3 Gb:
+    -> $ 0.30
+    -> R$ 1.49
+
+Network 30 Gb images:
+    -> $ 2.70
+    -> R$ 13.40
+
+Total USD: $ 3.00
+Total Real: R$ 14.89

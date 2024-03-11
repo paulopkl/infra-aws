@@ -1,4 +1,3 @@
-# Configure the backend to store state file in an S3 bucket
 terraform {
   required_version = "= 1.7.4"
 
@@ -11,7 +10,7 @@ terraform {
 
   backend "s3" {
     bucket = "paulopkl-terraform-state"
-    key    = "tfstate/acm/terraform.tfstate" # "path/to/your/state/file.tfstate"
+    key    = "tfstate/rds/terraform.tfstate" # "path/to/your/state/file.tfstate"
     region = "us-east-1"
     # You may specify other configurations like encryption, dynamodb table, etc.
   }

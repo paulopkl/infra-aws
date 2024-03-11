@@ -58,11 +58,10 @@ resource "aws_instance" "rabbit-mq" {
 
   ami                         = data.aws_ami.ubuntu.id // ubuntu 22.04
   instance_type               = var.aws_rabbitmq_instance_type
-  subnet_id                   = aws_subnet.public[count.index].id # Assuming you have a list of public subnets
+  subnet_id                   = element(aws_subnet.public[*].id, length(aws_subnet.public) - 1) # Assuming you have a list of public subnets
   associate_public_ip_address = false
-
-  #   vpc_security_group_ids = [aws_security_group.public_security_group.id] # Attach the public security group
-  key_name = aws_key_pair.key.key_name
+  vpc_security_group_ids      = [aws_security_group.private_rabbitmq.id] # Attach the public security group
+  key_name                    = aws_key_pair.key.key_name
 
   tags = var.aws_tags
 }

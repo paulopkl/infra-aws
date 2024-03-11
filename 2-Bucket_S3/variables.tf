@@ -9,13 +9,21 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
-variable "aws_cidr_block" {
-  default = "10.0.0.0/24"
+variable "aws_user_access_key" {
+  type        = string
+  description = "The AWS User Access Key."
+  default     = "AKIAVARCT74LVPNKTLYD"
+}
+
+variable "aws_secret_access_key" {
+  type        = string
+  description = "The AWS User Secret Key."
+  default     = "6RibDQYdReta5D0YRNMHcLmsYHZb1wIGssFb6PFN"
 }
 
 variable "bucket_name" {
   description = "(required since we are not using 'bucket') Creates a unique bucket name beginning with the specified prefix. Conflicts with bucket."
-  default = "paulopkl-terraform-state"
+  default     = "paulopkl-terraform-state"
 }
 
 variable "aws_tags" {
@@ -23,6 +31,8 @@ variable "aws_tags" {
     Name = "Tier 3"
   }
 }
+
+#########
 
 variable "bucket_s3_tags" {
   type        = map(string)

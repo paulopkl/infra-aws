@@ -1,7 +1,13 @@
+data "aws_vpc" "vq" {
+  tags = {
+    Name = "Tier 3"
+  }
+}
+
 # Create a security group for public subnets
 resource "aws_security_group" "database_security_group" {
-  name   = "tier3-public-security-group"
-  vpc_id = aws_vpc.tier3.id
+  name   = "vq-public-security-group"
+  vpc_id = data.aws_vpc.vq.id
 
   # Allow inbound traffic on port 5432
   dynamic "ingress" {

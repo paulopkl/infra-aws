@@ -1,0 +1,4 @@
+AWS Secret Manager:
+    -> $0.4 per secret per month   | R$ 1.99 per secret/month
+    -> $0.05 per 10,000 API calls. | R$ 0.25
+

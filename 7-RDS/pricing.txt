@@ -1,0 +1,80 @@
+#######################################################
+# MULTI-REGION
+db.t3.xlarge $ 0.579 hour - 730h
+0.23 USD / GB per month / instances
+1 instances x 4 vCPU x 730 hours in a month x 0.015 USD = 43.80 USD
+
+24h - 30 days (730 hours):
+    Utilization (On-demand):
+        -> $ 422.67
+        -> R$ 2105.07
+    RDS Proxy:
+        -> $ 43.80
+        -> R$ 218.14
+    Storage gp2 (SSD) 30 Gb:
+        -> $ 6.90
+        -> R$ 34.36
+    Backup 30 Gb:
+        -> $ 2.85
+        -> R$ 14.19
+
+Multi Region - 24h - 30 days - Total USD:  $ 476.19
+Multi Region - 24h - 30 days - Total Real: R$ 2371.63
+
+=======================================================
+12h - 30 days (365 hours):
+    Utilization (On-demand):
+        -> $ 211.34
+        -> R$ 1052.56
+    RDS Proxy:
+        -> $ 43.80
+        -> R$ 218.14
+    Storage gp2 (SSD) 30 Gb:
+        -> $ 6.90
+        -> R$ 34.36
+    Backup 30 Gb:
+        -> $ 2.85
+        -> R$ 14.19
+
+Multi Region - 12h - 30 days - Total USD:  $ 264.89
+Multi Region - 12h - 30 days - Total Real: R$ 1319.26
+
+#######################################################
+# SINGLE-REGION
+db.t3.xlarge $ 0.29 hour - 730h
+0.23 USD / GB per month / instances
+
+24h - 30 days (730 hours):
+    Utilization (On-demand):
+        -> $ 211.70
+        -> R$ 1054.35
+    RDS Proxy:
+        -> $ 43.80
+        -> R$ 218.14
+    Storage gp2 (SSD) 30 Gb:
+        -> $ 3.45
+        -> R$ 17.18
+    Backup 30 Gb:
+        -> $ 2.85
+        -> R$ 14.19
+
+Single Region - 24h - 30 days - Total USD:  $ 261.8
+Single Region - 24h - 30 days - Total Real: R$ 1303.87
+
+=======================================================
+12h - 30 days (365 hours):
+    Utilization (On-demand):
+        -> $ 105.85
+        -> R$ 527.18
+    RDS Proxy:
+        -> $ 43.80
+        -> R$ 218.14
+    Storage gp2 (SSD) 30 Gb:
+        -> $ 3.45
+        -> R$ 17.18
+    Backup 30 Gb:
+        -> $ 2.85
+        -> R$ 14.19
+
+Single Region - 12h - 30 days - Total USD:  $ 155.95
+Single Region - 12h - 30 days - Total Real: R$ 776.70

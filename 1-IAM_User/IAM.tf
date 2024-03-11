@@ -1,5 +1,69 @@
+# "arn:aws:iam::344743739159:user/administrator-vq"
 resource "aws_iam_user" "iamuser" {
   name = var.aws_iam_user_username
+  #   permissions_boundary = ""
+}
+
+resource "pgp_key" "user_login_key" {
+  name    = aws_iam_user.iamuser.name
+  email   = "palmeida.ipms@gmail.com"
+  comment = "Generated PGP Key"
+}
+
+resource "aws_iam_user_login_profile" "user_login" {
+  depends_on = [
+    aws_iam_user.iamuser,
+    pgp_key.user_login_key
+  ]
+
+  user                    = aws_iam_user.iamuser.name
+  pgp_key                 = pgp_key.user_login_key.public_key_base64
+  password_length         = 8
+  password_reset_required = false
+
+  lifecycle {
+    ignore_changes = [password_reset_required]
+  }
+}
+
+data "pgp_decrypt" "user_password_decrypt" {
+  ciphertext          = aws_iam_user_login_profile.user_login.encrypted_password
+  ciphertext_encoding = "base64"
+  private_key         = pgp_key.user_login_key.private_key
+}
+
+resource "aws_iam_access_key" "iam_access_key" {
+  user = aws_iam_user.iamuser.name
+  #   pgp_key = pgp_key.user_login_key.public_key_base64
+  status = "Active"
+}
+
+resource "local_file" "example" {
+  filename = "./${var.aws_iam_user_username}" # Specify the path where you want to create the file
+  content  = <<-EOT
+    [${var.aws_iam_user_username}]
+    aws_access_key_id = ${aws_iam_access_key.iam_access_key.id}
+    aws_secret_access_key = ${aws_iam_access_key.iam_access_key.secret}
+EOT
+}
+
+output "credentials" {
+  value = {
+    "key"      = aws_iam_access_key.iam_access_key.id
+    "secret"   = aws_iam_access_key.iam_access_key.secret
+    "password" = data.pgp_decrypt.user_password_decrypt.plaintext
+  }
+  sensitive = true
+}
+
+resource "aws_iam_user_policy_attachment" "admin_administrator_access" {
+  user       = aws_iam_user.iamuser.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}
+
+resource "aws_iam_user_policy_attachment" "iam_user_change_password" {
+  user       = aws_iam_user.iamuser.name
+  policy_arn = "arn:aws:iam::aws:policy/IAMUserChangePassword"
 }
 
 # resource "aws_iam_policy" "restricted_policy" {
@@ -100,17 +164,3 @@ resource "aws_iam_user" "iamuser" {
 # }
 # EOF
 # }
-
-output "user_arn" {
-  value = aws_iam_user.iamuser.arn
-}
-
-resource "aws_iam_user_policy_attachment" "admin_administrator_access" {
-  user       = aws_iam_user.iamuser.name
-  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
-}
-
-resource "aws_iam_user_policy_attachment" "iam_user_change_password" {
-  user       = aws_iam_user.iamuser.name
-  policy_arn = "arn:aws:iam::aws:policy/IAMUserChangePassword"
-}

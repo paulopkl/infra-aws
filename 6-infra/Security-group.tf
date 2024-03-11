@@ -1,7 +1,7 @@
 # A security group for the ELB so it is accessible via the web
 resource "aws_security_group" "swarm_load_balancer" {
   name   = "securit-group-swarm-load-balancer"
-  vpc_id = "${aws_vpc.swarm.id}"
+  vpc_id = aws_vpc.swarm.id
 
   # HTTP access from anywhere
   ingress {
@@ -41,34 +41,34 @@ resource "aws_security_group" "public_manager_nodes" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = var.ssh_cidr_blocks
+    cidr_blocks = ["0.0.0.0/0"] # var.ssh_cidr_blocks
   }
 
   # HTTP
   ingress {
-    protocol  = "tcp"
-    from_port = 80
-    to_port   = 80
-    security_groups = ["${aws_security_group.swarm_node.id}"]
+    protocol        = "tcp"
+    from_port       = 80
+    to_port         = 80
+    security_groups = [aws_lb.private_worker_nodes.id]
     # cidr_blocks = ["0.0.0.0/0"]
   }
 
   # HTTPS
   ingress {
-    protocol  = "tcp"
-    from_port = 443
-    to_port   = 443
-    security_groups = ["${aws_security_group.swarm_node.id}"]
+    protocol        = "tcp"
+    from_port       = 443
+    to_port         = 443
+    security_groups = [aws_lb.private_worker_nodes.id]
     # cidr_blocks = ["0.0.0.0/0"]
   }
 
   # Docker Swarm manager only
   ingress {
-    description = "Docker Swarm management between managers"
-    from_port   = 2377
-    to_port     = 2377
-    protocol    = "tcp"
-    security_groups = ["${aws_security_group.swarm_node.id}"]
+    description     = "Docker Swarm management between managers"
+    from_port       = 2377
+    to_port         = 2377
+    protocol        = "tcp"
+    security_groups = [aws_security_group.private_worker_nodes.id]
     # cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -102,10 +102,34 @@ resource "aws_security_group" "private_worker_nodes" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = var.ssh_cidr_blocks
+    cidr_blocks = ["0.0.0.0/0"] # var.ssh_cidr_blocks
   }
 
   # Docker Swarm ports from this security group only
+  ingress {
+    description     = "Docker container network discovery"
+    from_port       = 7946
+    to_port         = 7946
+    protocol        = "tcp"
+    security_groups = [aws_security_group.public_manager_nodes.id]
+  }
+
+  ingress {
+    description     = "Docker container network discovery"
+    from_port       = 7946
+    to_port         = 7946
+    protocol        = "udp"
+    security_groups = [aws_security_group.public_manager_nodes.id]
+  }
+
+  ingress {
+    description     = "Docker overlay network"
+    from_port       = 4789
+    to_port         = 4789
+    protocol        = "udp"
+    security_groups = [aws_security_group.public_manager_nodes.id]
+  }
+
   ingress {
     description = "Docker container network discovery"
     from_port   = 7946

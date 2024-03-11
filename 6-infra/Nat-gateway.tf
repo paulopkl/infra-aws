@@ -1,6 +1,7 @@
 # Allocate an Elastic IP for the NAT Gateway
 resource "aws_eip" "tier3" {
   # depends_on                = [aws_internet_gateway.terraform-lab-igw]
+
   # associate_with_private_ip = "10.0.0.5"
 
   vpc = true # Allocate the Elastic IP in the VPC

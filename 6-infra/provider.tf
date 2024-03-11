@@ -4,7 +4,7 @@ terraform {
 
   required_providers {
     aws = {
-      source = "hashicorp/aws"
+      source  = "hashicorp/aws"
       version = "5.39.0"
     }
     local = {
@@ -12,13 +12,13 @@ terraform {
       version = "2.4.1"
     }
     tls = {
-      source = "hashicorp/tls"
+      source  = "hashicorp/tls"
       version = "4.0.5"
     }
   }
 
   backend "s3" {
-    bucket =  "paulopkl-terraform-state"
+    bucket = "paulopkl-terraform-state"
     key    = "tfstate/infra-network/terraform.tfstate" # "path/to/your/state/file.tfstate"
     region = "us-east-1"
     # You may specify other configurations like encryption, dynamodb table, etc.
@@ -28,7 +28,9 @@ terraform {
 # Configure the AWS provider
 provider "aws" {
   region = var.aws_region
-  profile = var.aws_profile_name
+  #   profile = var.aws_profile_name
+  access_key = var.aws_user_access_key
+  secret_key = var.aws_secret_access_key
 }
 
 provider "local" {

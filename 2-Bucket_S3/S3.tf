@@ -1,12 +1,9 @@
 # Create an S3 bucket
 resource "aws_s3_bucket" "s3_bucket" {
-  bucket = var.bucket_name  # Replace with your desired bucket name
-  
-  force_destroy = var.bucket_force_destroy
-
+  bucket              = var.bucket_name # Replace with your desired bucket name
   object_lock_enabled = true
-
-  tags          = var.bucket_s3_tags
+  force_destroy       = var.bucket_force_destroy
+  tags                = var.bucket_s3_tags
 }
 
 ### PRIVATE
