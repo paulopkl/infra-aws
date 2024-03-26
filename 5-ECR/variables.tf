@@ -4,10 +4,10 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
-variable "aws_profile_name" {
-  type    = string
-  default = "admin"
-}
+# variable "aws_profile_name" {
+#   type    = string
+#   default = "admin"
+# }
 
 variable "aws_user_access_key" {
   type        = string
@@ -26,9 +26,12 @@ variable "ecr_name" {
   description = "The name of the ECR registry"
   type        = set(string)
   default = [
-    "backend_service",
-    # "frontend_service",
+    "keycloak",
+    "frontend_service", # Reactjs
+    "backend_service", # API
     # "golang_microservice_service",
+    "redis",
+    "rabbitmq",
   ]
 }
 

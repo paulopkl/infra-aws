@@ -1,14 +1,12 @@
 # Create an Application Load Balancer
 # Layer 4, no SSL termination, since it is handled by Traefik
 resource "aws_lb" "swarm_managers" {
-  name               = "production-swarm_managers"
+  name               = "production-swarm-managers"
   internal           = false
   load_balancer_type = "application"
 
   # Network
-  subnets = [
-    aws_subnet.public.*.id
-  ]
+  subnets = [for subnet in aws_subnet.public : subnet.id]
   security_groups = [
     aws_security_group.swarm_load_balancer.id
   ]
@@ -35,7 +33,7 @@ resource "aws_lb_target_group" "swarm_managers" {
   name     = "target-group-for-swarm" # var.name
   port     = 80                       # var.container_port
   protocol = "HTTP"
-  vpc_id   = aws_vpc.tier3.id
+  vpc_id   = aws_vpc.vq.id
   #   target_type = "ip"
 
   health_check {
@@ -50,12 +48,7 @@ resource "aws_lb_target_group" "swarm_managers" {
 }
 
 # Attach the target group to the ALB
-resource "aws_lb_target_group_attachment" "example" {
-  target_group_arn = aws_lb_target_group.swarm_managers.arn
-  target_id        = aws_autoscaling_group.example.id
-}
-
-# Output the DNS name of the ALB
-output "alb_dns_name" {
-  value = aws_lb.swarm_managers.dns_name
-}
+# resource "aws_lb_target_group_attachment" "example" {
+#   target_group_arn = aws_lb_target_group.swarm_managers.arn
+#   target_id        = aws_autoscaling_group.swarm_manager_nodes.id
+# }

@@ -1,0 +1,20 @@
+---
+- name: Install Traefik on Ubuntu 22.04
+  hosts: swarm_managers # Selecting the first manager from the inventory
+  become: yes
+  tasks:
+      - name: Install Traefik
+        become: yes
+        when: inventory_hostname == groups['swarm_managers'][0] # Run only on the first manager
+        block:
+            - name: Remove stack traefik
+              ignore_errors: yes
+              shell: docker stack rm traefik
+
+            - name: Copy docker-compose.traefik.yaml to the target machine
+              copy:
+                  src: ./1-traefik/docker-compose.traefik.yaml
+                  dest: ./docker-compose.traefik.yaml
+
+            - name: Deploy Traefik stack
+              shell: docker stack deploy traefik -c ./docker-compose.traefik.yaml

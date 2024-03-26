@@ -1,0 +1,19 @@
+---
+- name: Install Keycloak on Ubuntu 22.04
+  hosts: swarm_managers # Selecting the first manager from the inventory
+  become: yes
+  tasks:
+      - name: Install Keycloak
+        when: inventory_hostname == groups['swarm_managers'][0] # Run only on the first manager
+        block:
+            - name: Remove previous Keycloak stack installations
+              ignore_errors: yes
+              shell: docker stack rm keycloak
+
+            - name: Copy docker-compose.keycloak.yaml to the target machine
+              copy:
+                  src: ./4-keycloak/docker-compose.keycloak.yaml
+                  dest: ./docker-compose.keycloak.yaml
+
+            - name: Deploy visualizer stack
+              shell: docker stack deploy --resolve-image=always --with-registry-auth keycloak -c ./docker-compose.keycloak.yaml

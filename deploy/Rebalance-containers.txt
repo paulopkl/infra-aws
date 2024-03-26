@@ -1,0 +1,103 @@
+sudo docker service create --name=api --publish=80:80/tcp --constraint=node.role==worker  \
+  --mode=global \
+  msfidelis/example-api
+
+
+# docker run -it -d -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock dockersamples/visualizer
+
+# Run in a different context root
+# docker run -it -d -e CTX_ROOT=/visualizer -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock dockersamples/visualizer
+
+# docker service create --name nginweb -p 80:80 --replicas 2 nginx
+
+# docker node update --availability drain node3
+# docker node update --availability active node3
+
+services:
+
+  flaskapp:
+    image: jvsell/flaskapp
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 50M
+      restart_policy:
+        condition: on-failure
+      placement:
+        constriaints: [node.role == worker]
+    ports:
+      - 80:8080
+    networks:
+      - appnet
+
+  visualizer:
+    image: dockersamples/visualizer:stable
+    ports:
+      - 8081:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      placement:
+        constriaints:
+          - node.role == manager
+    networks:
+      - appnet
+  httpd:
+    image: httpd:latest
+    command: httpd-foreground
+    volumes:
+      - httpd_data:/var/www/html
+    networks:
+      - network_public
+    environment:
+      VIRTUAL_HOST: httpd.paulo.dev
+      HTTP_PORT: 80
+      NOME: valor
+    deploy:
+      # Define a quantidade de replicas (Somente no modo replicated)
+      replicas: 2
+      # modo de deploy do serviço
+      mode: replicated # replicated ou global
+      placement:
+        constriaints:
+          - node.hostname == worker1
+          # - node.role == manager ## manager or worker
+          # Using labels
+          - node.labels.app == http
+      resources:
+        limits:
+          cpus: 1 # 1 => 1 vCPU inteira
+          memory: 1024M # 1Gb de memória
+      labels:
+        - traefik.enable=true
+  hashura:
+    image: hashura/graphql-engine:latest
+    environment:
+      HASHURA_GRAPHQL_DATABASE_URI: postgres://postgres:@postgres:5432/postgres
+      HASHURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASHURA_GRAPHQL_ADMIN_SECRET: "true"
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constriaints:
+          - node.role == worker
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 256M
+    networks:
+      - appnet
+
+networks:
+  appnet:
+    driver: overlay
+    # external: true
+
+# docker service rm `docker service ls -q`
+
+
+GRANT ALL PRIVILEGES ON DATABASE keycloak TO postgres;
+

@@ -1,0 +1,15 @@
+---
+- name: Install Golang Microservice on Ubuntu 22.04
+  hosts: swarm_managers # Selecting the first manager from the inventory
+  become: yes
+  tasks:
+      - name: Install Golang Microservice
+        when: inventory_hostname == groups['swarm_managers'][0] # Run only on the first manager
+        block:
+            - name: Copy docker-compose.microservice.yaml to the target machine
+              copy:
+                  src: ./8-microservice/docker-compose.microservice.yaml
+                  dest: ./docker-compose.microservice.yaml
+
+            - name: Deploy visualizer stack
+              shell: docker stack deploy microservice -c ./docker-compose.microservice.yaml

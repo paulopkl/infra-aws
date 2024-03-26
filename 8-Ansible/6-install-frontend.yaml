@@ -1,0 +1,15 @@
+---
+- name: Install Frontend ReactJS on Ubuntu 22.04
+  hosts: swarm_managers # Selecting the first manager from the inventory
+  become: yes
+  tasks:
+      - name: Install Frontend ReactJS
+        when: inventory_hostname == groups['swarm_managers'][0] # Run only on the first manager
+        block:
+            - name: Copy docker-compose.frontend.yaml to the target machine
+              copy:
+                  src: ./5-frontend/docker-compose.frontend.yaml
+                  dest: ./docker-compose.frontend.yaml
+
+            - name: Deploy visualizer stack
+              shell: docker stack deploy frontend -c ./docker-compose.frontend.yaml

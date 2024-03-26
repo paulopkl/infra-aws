@@ -1,0 +1,113 @@
+{
+  "rabbit_version": "3.8.34",
+  "rabbitmq_version": "3.8.34",
+  "product_name": "RabbitMQ",
+  "product_version": "3.8.34",
+  "users": [
+    {
+      "name": "admin",
+      "password_hash": "KjaGYSefRcYYEGZaUD07mFq2qJ7fCItfQxL63c2GRY8Gorn6",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": "administrator",
+      "limits": {}
+    },
+    {
+      "name": "lojaplus",
+      "password_hash": "gQ5qEQr47ME27ZCyDbgsUHdJCbX2NojOFTQEQVIRqf41lY97",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": "monitoring",
+      "limits": {}
+    }
+  ],
+  "vhosts": [{ "name": "/" }],
+  "permissions": [
+    {
+      "user": "admin",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    },
+    {
+      "user": "lojaplus",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "topic_permissions": [],
+  "parameters": [],
+  "global_parameters": [
+    {
+      "name": "internal_cluster_id",
+      "value": "rabbitmq-cluster-id-dGsqD5pVpwB-PmoGTYRI9g"
+    }
+  ],
+  "policies": [],
+  "queues": [
+    {
+      "name": "transfer",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "dlx.transfer",
+        "x-dead-letter-routing-key": "transfer.dead"
+      }
+    },
+    {
+      "name": "transfer_dead_letters",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "delayed.direct",
+      "vhost": "/",
+      "type": "x-delayed-message",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": { "x-delayed-type": "topic" }
+    },
+    {
+      "name": "dlx.transfer",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "amq.direct",
+      "vhost": "/",
+      "destination": "transfer",
+      "destination_type": "queue",
+      "routing_key": "transfer.active",
+      "arguments": {}
+    },
+    {
+      "source": "delayed.direct",
+      "vhost": "/",
+      "destination": "transfer",
+      "destination_type": "queue",
+      "routing_key": "transfer.retry",
+      "arguments": {}
+    },
+    {
+      "source": "dlx.transfer",
+      "vhost": "/",
+      "destination": "transfer_dead_letters",
+      "destination_type": "queue",
+      "routing_key": "transfer.dead",
+      "arguments": {}
+    }
+  ]
+}

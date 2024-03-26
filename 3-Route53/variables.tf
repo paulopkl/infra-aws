@@ -3,10 +3,10 @@ variable "aws_region" {
   default = "us-east-1"
 }
 
-variable "aws_profile_name" {
-  type    = string
-  default = "admin"
-}
+# variable "aws_profile_name" {
+#   type    = string
+#   default = "admin"
+# }
 
 variable "aws_user_access_key" {
   type        = string

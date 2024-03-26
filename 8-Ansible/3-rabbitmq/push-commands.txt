@@ -1,0 +1,8 @@
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 344743739159.dkr.ecr.us-east-1.amazonaws.com
+
+docker build -f Dockerfile.rabbitmq -t rabbitmq .
+
+docker tag rabbitmq:latest 344743739159.dkr.ecr.us-east-1.amazonaws.com/rabbitmq:latest
+docker tag rabbitmq:v1.0.0 344743739159.dkr.ecr.us-east-1.amazonaws.com/rabbitmq:v1.0.0
+
+docker push 344743739159.dkr.ecr.us-east-1.amazonaws.com/rabbitmq:latest 344743739159.dkr.ecr.us-east-1.amazonaws.com/rabbitmq:v1.0.0

@@ -33,14 +33,14 @@ variable "aws_tags" {
 variable "db_availability_zone" {
   description = "The key-value maps for tagging"
   type        = string
-  default = "us-east-1c"
+  default     = "us-east-1c"
 }
 
 ### Database Configs
 variable "db_multi_az_deployment" {
   type        = bool
   description = "Active multi-region database"
-  default     = true
+  default     = false
 }
 
 variable "db_instance_type" {
@@ -58,11 +58,24 @@ variable "db_name" {
 variable "db_username" {
   type        = string
   description = "Database user name"
-  default     = "admin"
+  default     = "veridiana_quirino"
 }
 
 variable "db_password" {
   type        = string
   description = "Database user password"
-  default     = "@dmin12345"
+  default     = "Admin12345"
+}
+
+variable "aws_cidr_block" {
+  type    = string
+  default = "10.0.0.0/16"
+}
+
+variable "aws_vpc_tags" {
+  default = {
+    Name        = "Tier 3"
+    Environment = "Prod"
+    Company     = "Veridiana-Quirino"
+  }
 }

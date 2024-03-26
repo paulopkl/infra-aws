@@ -1,0 +1,15 @@
+---
+- name: Install Backend Private API on Ubuntu 22.04
+  hosts: swarm_managers # Selecting the first manager from the inventory
+  become: yes
+  tasks:
+      - name: Install Backend Private API
+        when: inventory_hostname == groups['swarm_managers'][0] # Run only on the first manager
+        block:
+            - name: Copy docker-compose.backend.yaml to the target machine
+              copy:
+                  src: ./7-backend/docker-compose.backend.yaml
+                  dest: ./docker-compose.backend.yaml
+
+            - name: Deploy visualizer stack
+              shell: docker stack deploy backend -c ./docker-compose.backend.yaml

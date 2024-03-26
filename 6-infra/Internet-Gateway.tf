@@ -1,8 +1,8 @@
-
-resource "aws_internet_gateway" "tier3" {
-  vpc_id = aws_vpc.tier3.id
+# Create Internet Gateway
+resource "aws_internet_gateway" "vq" {
+  vpc_id = aws_vpc.vq.id
 
   tags = {
-    Name = "tier3-public-internet-gateway"
+    Name = "vq-public-internet-gateway"
   }
 }

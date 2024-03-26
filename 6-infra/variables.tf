@@ -1,13 +1,13 @@
-variable "aws_profile_name" {
-  type    = string
-  default = "admin"
-}
-
 variable "aws_region" {
   type        = string
   description = "The AWS region to use to create resources."
   default     = "us-east-1"
 }
+
+# variable "aws_profile_name" {
+#   type    = string
+#   default = "admin"
+# }
 
 variable "aws_user_access_key" {
   type        = string
@@ -34,6 +34,14 @@ variable "ssh_cidr_blocks" {
 variable "aws_tags" {
   default = {
     Name = "Tier 3"
+  }
+}
+
+variable "aws_vpc_tags" {
+  default = {
+    Name = "Tier 3"
+    Environment = "Prod"
+    Company = "Veridiana-Quirino"
   }
 }
 
@@ -67,7 +75,17 @@ variable "aws_private_subnets" {
   default = 3
 }
 
+variable "aws_hosted_name" {
+  type    = string
+  default = "teste-application.com"
+}
+
 variable "aws_domain_name" {
   type    = string
   default = "teste-application.com"
+}
+
+variable "aws_ecr_prefix" {
+  type    = string
+  default = "344743739159.dkr.ecr.us-east-1.amazonaws.com"
 }

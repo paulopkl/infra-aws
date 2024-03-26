@@ -1,3 +1,0 @@
-ansible-playbook ./install_docker.yml -u your_ssh_user -i your_inventory_file
-
-ansible-playbook -i inventory.ini ./install_docker.yaml -vvvvv

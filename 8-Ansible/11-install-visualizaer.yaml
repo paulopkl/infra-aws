@@ -1,0 +1,19 @@
+---
+- name: Install Visualizer on Ubuntu 22.04
+  hosts: swarm_managers # Selecting the first manager from the inventory
+  become: yes
+  tasks:
+      - name: Install Visualizer
+        when: inventory_hostname == groups['swarm_managers'][0] # Run only on the first manager
+        block:
+            - name: Remove previous Visualizer stack installation
+              ignore_errors: yes
+              shell: docker stack rm visualizer
+
+            - name: Copy docker-compose.visualizer.yaml to the target machine
+              copy:
+                  src: ./10-visualizer/docker-compose.visualizer.yaml
+                  dest: ./docker-compose.visualizer.yaml
+
+            - name: Deploy visualizer stack
+              shell: docker stack deploy visualizer -c ./docker-compose.visualizer.yaml

@@ -1,0 +1,46 @@
+# RabbitMQ Exchanges
+---------- Default Exchange.
+name: amq.direct
+type: topic
+routing key:
+    - transfer
+    - 
+---------- Default Delayed Exchange to make retries.
+name: delayed.direct
+type: x-delayed-message
+options:
+    arguments:
+        "x-delayed-type": "direct"
+        "x-retry-count": 5
+---------- Default Dead Letter Exchange
+name: dlx.transfer
+type: topic
+----------
+
+
+
+
+
+# RabbitMQ Queues
+---------- Queue Default.
+name: transfer-queue
+routing key: transfer.active
+---------- Queue to Delayed Exchange to make retries.
+exchange: delayed.direct
+name: transfer-queue-delayed
+routing key: tranfer-delayed
+publish:
+    routing key: tranfer-delayed
+    headers:
+        "x-delay": 15000
+---------- Queue Dead Letter Exchange.
+name: transfer_dead_letters
+routing key: transfer.dead
+
+# RabbitMQ Plugins
+rabbitmq-plugins directories -s
+
+# Plugins enabled
+cat /etc/rabbitmq/enabled_plugins
+
+

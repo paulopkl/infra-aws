@@ -1,3 +1,7 @@
+data "aws_route53_zone" "zone" {
+  name = var.aws_hosted_name
+}
+
 data "aws_acm_certificate" "dns_certificate" {
   domain      = var.aws_domain_name
   most_recent = true
@@ -11,6 +15,11 @@ resource "aws_lb_listener" "http" {
   depends_on = [
     aws_lb_target_group.swarm_managers
   ]
+
+  # default_action {
+  #   target_group_arn = aws_lb_target_group.swarm_managers.arn
+  #   type             = "forward"
+  # }
 
   default_action {
     type = "redirect"
@@ -27,7 +36,8 @@ resource "aws_lb_listener" "http" {
 # Attach the ACM certificate to the ALB
 resource "aws_lb_listener" "https" {
   depends_on = [
-    aws_lb_target_group.swarm_managers
+    aws_lb.swarm_managers,
+    aws_lb_target_group.swarm_managers,
   ]
 
   load_balancer_arn = aws_lb.swarm_managers.arn
@@ -45,6 +55,10 @@ resource "aws_lb_listener" "https" {
 
 # Attach the ACM certificate to the ALB
 resource "aws_lb_listener_certificate" "https_additional_certs" {
+  depends_on = [
+    aws_lb_listener.https
+  ]
+
   listener_arn    = aws_lb_listener.https.arn
   certificate_arn = data.aws_acm_certificate.dns_certificate.arn
 }

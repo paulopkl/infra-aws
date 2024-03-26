@@ -1,40 +1,40 @@
 resource "aws_route_table" "public_route_table" {
   depends_on = [
-    aws_vpc.tier3,
-    aws_internet_gateway.tier3
+    aws_vpc.vq,
+    aws_internet_gateway.vq
   ]
 
   # count = length(aws_subnet.public)
 
-  vpc_id = aws_vpc.tier3.id
+  vpc_id = aws_vpc.vq.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.tier3.id
+    gateway_id = aws_internet_gateway.vq.id
   }
 
   tags = {
-    Name = "tier3-public-route-table"
+    Name = "vq-public-route-table"
   }
 }
 
 resource "aws_route_table" "private_route_table" {
   depends_on = [
-    aws_vpc.tier3,
-    aws_nat_gateway.tier3
+    aws_vpc.vq,
+    aws_nat_gateway.vq
   ]
 
   # count = length(aws_subnet.private)
 
-  vpc_id = aws_vpc.tier3.id
+  vpc_id = aws_vpc.vq.id
 
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.tier3.id
+    nat_gateway_id = aws_nat_gateway.vq.id
   }
 
   tags = {
-    Name = "tier3-private-route-table"
+    Name = "vq-private-route-table"
   }
 }
 

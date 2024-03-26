@@ -1,0 +1,43 @@
+
+version: '3.8'
+
+services:
+  nginx:
+    # restart: unless-stopped
+    hostname: nginx
+    image: 'jc21/nginx-proxy-manager:latest'
+    volumes:
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
+    networks:
+      - nginx_proxy_manager
+    ports:
+      - '80:80' # Public HTTP Port
+      - '443:443' # Public HTTPS Port
+      - '81:81' # Admin Web Port
+    # healthcheck:
+    #   test: ["CMD", "/usr/bin/check-health"]
+    #   interval: 10s
+    #   timeout: 3s
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 256M
+
+volumes:
+  npm_data:
+    # external: true
+  npm_letsencrypt:
+    # external: true
+
+networks:
+  nginx_proxy_manager:
+    external: true
+
+# Email:    admin@example.com
+# Password: changeme

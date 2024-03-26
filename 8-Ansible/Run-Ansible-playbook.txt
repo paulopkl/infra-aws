@@ -1,0 +1,18 @@
+cd /mnt/h/Projetos/VQ-infra/8-Ansible
+
+cp /mnt/c/Users/Paulo/.ssh/tier3-ssh.pem ~/.ssh/tier3-ssh.pem && chmod 600 ~/.ssh/tier3-ssh.pem
+
+ansible-playbook -i inventory.ini ./install_docker.yaml -vvvvv
+
+ansible-playbook -i inventory.ini ./1-configure-cluster.yaml -v
+ansible-playbook -i inventory.ini ./12-install-nginx.yaml -v
+ansible-playbook -i inventory.ini ./3-install-portainer.yaml -v
+ansible-playbook -i inventory.ini ./10-install-pgadmin.yaml -v
+ansible-playbook -i inventory.ini ./4-install-rabbitmq.yaml -v
+ansible-playbook -i inventory.ini ./5-install-keycloak.yaml -v
+ansible-playbook -i inventory.ini ./6-install-frontend.yaml -v
+ansible-playbook -i inventory.ini ./7-install-redis.yaml -v
+ansible-playbook -i inventory.ini ./8-install-backend.yaml -v
+ansible-playbook -i inventory.ini ./9-install-golang-microservice.yaml -v
+
+ansible-playbook -i inventory.ini ./2-install-traefik.yaml -v

@@ -1,0 +1,7 @@
+vim /etc/crontab
+
+## Docker login to ECR for credentials every 12 hours, since ECR credentials lasts 12 hours
+0 */12 * * * aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 344743739159.dkr.ecr.us-east-1.amazonaws.com
+
+## Docker service auto update every 1 hour
+0 * * * * docker service ls -q > dkr_svcs && for i in $(cat dkr_svcs); do docker service update "$i" --force ; done

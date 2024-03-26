@@ -13,3 +13,28 @@ Network 30 Gb images:
 
 Total USD: $ 3.00
 Total Real: R$ 14.89
+
+
+
+$0.005 per Idle public IPv4 address per hour
+$0.005 per In-use public IPv4 address per hour
+
+
+
+
+WAF
+    $1.00 per rule created (prorated hourly)
+    $5.00 per web ACL created (prorated hourly)
+
+
+
+EC2:
+
+Amazon Elastic Compute Cloud NatGateway
+    $0.045 per GB Data Processed by NAT Gateways
+    $0.045 per NAT Gateway Hour
+Amazon Elastic Compute Cloud running Linux/UNIX
+    $0.0116 per On Demand Linux t2.micro Instance Hour
+    $0.0832 per On Demand Linux t3.large Instance Hour
+EBS:
+    $0.10 per GB-month of General Purpose SSD (gp2) provisioned storage - US East (Northern Virginia)

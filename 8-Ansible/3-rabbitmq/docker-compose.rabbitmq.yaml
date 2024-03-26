@@ -1,0 +1,72 @@
+# docker stack deploy -c docker-compose.portainer.yaml portainer
+# Definitions URL http://localhost:15672/api/definitions
+
+x-rabbitmq-env-variables: &rabbitmq-env-variables # RABBITMQ_ERLANG_COOKIE: "asda"
+  RABBITMQ_DEFAULT_USER: admin
+  RABBITMQ_DEFAULT_PASS: AdM1n_V3ridi@naQu1r1n0Z0Z4
+  RABBITMQ_DEFAULT_VHOST: /
+  # RABBITMQ_LOJAPLUS_USER: lojaplus
+  # RABBITMQ_LOJAPLUS_PASS: L0j4plus_V3ridi@naQu1r1n0Z0Z4
+
+version: "3.8"
+
+services:
+  rabbitmq:
+    container_name: rabbitmq
+    hostname: rabbitmq
+    image: 344743739159.dkr.ecr.us-east-1.amazonaws.com/rabbitmq:v1.0.0 # latest
+    # command: rabbitmq-server
+    # ports:
+    #   - 15672:15672
+    #   - 5672:5672
+    # volumes:
+    #   - ./.docker/rabbitmq:/var/lib/rabbitmq
+    #   - rabbitmq_data:/var/lib/rabbitmq
+    #   - ./rabbitmq-definitions.json:/etc/rabbitmq/definitions.json
+    environment:
+      <<: *rabbitmq-env-variables
+    networks:
+      - nginx_proxy_manager
+      - microservices
+      # - traefik_production
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+          # - node.aws.ec2.tag.Name == RabbitMQ
+      resources:
+        reservations:
+          cpus: "0.5"
+          memory: 5000M
+        # limits:
+        #   cpus: "1"
+        #   memory: 5000M
+          # cpus: "0.5"
+          # memory: 512M
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik_production"
+        - "traefik.http.routers.rabbitmq.rule=Host(`rabbitmq.teste-application.com`)"
+        - "traefik.http.routers.rabbitmq.service=rabbitmq"
+        - "traefik.http.routers.rabbitmq.entrypoints=web"
+        - "traefik.http.services.rabbitmq.loadbalancer.server.port=15672"
+        # - "traefik.http.routers.portainer.entrypoints=websecure"
+        # - "traefik.http.services.rabbitmq.loadbalancer.server.scheme=http"
+        # - "traefik.http.routers.rabbitmq.tls.certresolver=le"
+        # - "traefik.http.routers.portainer.priority=1"
+
+volumes:
+  rabbitmq_data:
+    # external: true
+
+networks:
+  nginx_proxy_manager:
+    external: true
+  #   # attachable: true
+  microservices:
+    external: true
+  # traefik_production:
+  #   external: true
+    # attachable: true

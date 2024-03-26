@@ -1,0 +1,49 @@
+# docker stack deploy -c docker-compose.visualizer.yaml visualizer
+
+version: "3.8"
+
+services:
+  visualizer:
+    image: dockersamples/visualizer:latest
+    ports:
+      - "8081:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - nginx_proxy_manager
+      # - traefik_production
+      # - production
+    deploy:
+      # mode: global
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      # labels:
+      #   - "traefik.enable=true"
+      #   - "traefik.docker.network=traefik_production"
+      #   # - "traefik.http.routers.visualizer.service=visualizer"
+      #   - "traefik.http.routers.visualizer_sem_https.rule=Host(`portainer.teste-application.com`)"
+      #   - "traefik.http.routers.visualizer_sem_https.entrypoints=web"
+      #   - "traefik.http.services.visualizer_sem_https.loadbalancer.server.port=8080"
+
+      #   - "traefik.http.routers.visualizer.rule=Host(`portainer.teste-application.com`)"
+      #   - "traefik.http.routers.visualizer.entrypoints=websecure"
+      #   - "traefik.http.services.visualizer.loadbalancer.server.port=8080"
+      #   # - "traefik.http.services.visualizer.loadbalancer.server.port=9443"
+      #   # - "traefik.http.services.visualizer.loadbalancer.server.scheme=http"
+      #   # - "traefik.http.routers.visualizer.priority=1"
+      #   #- "traefik.http.routers.visualizer.tls.certresolver=le"
+      #   # - "traefik.http.routers.visualizer.middlewares=redirect-to-https@file"
+      #   # - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+
+networks:
+  nginx_proxy_manager:
+    external: true
+    # driver: overlay
+  # traefik_production:
+  #   external: true
+  #   attachable: true
+  # npm_public:
+  #   external: true

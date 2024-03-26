@@ -1,0 +1,75 @@
+# docker stack deploy -c docker-compose.traefik.yaml traefik_production
+
+version: "3.8"
+
+services:
+  traefik:
+    # restart: unless-stopped
+    # container_name: traefik
+    # hostname: traefik
+    image: traefik:v2.11.0 # latest
+    command:
+      - --api=true
+      - --api.insecure=true
+      - --api.dashboard=true
+      - --log.level=DEBUG
+
+      ## Global redirect HTTP -> HTTPS
+      # - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      # - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entrypoints.web.address=:80 # HTTP
+      # - --entrypoints.websecure.address=:443 # HTTPS
+
+      # - --docker # Enables the web UI and tells Traefik to listen to docker
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=true
+      - --providers.docker.swarmMode=true # Docker Swarm
+      - --providers.docker.swarmModeRefreshSeconds=60
+
+      #defina a mesma rede que você criou para o traefik
+      - --providers.docker.network=traefik_production
+      # - --providers.docker.endpoint=tcp://127.0.0.1:2377 # Docker Swarm
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
+
+      ## SSL Certificates # Config para SSL Lets Encrypt
+      # - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+      # - --certificatesresolvers.le.acme.email=seu_email@email.com # altere para seu e-mail
+      # - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      # - --certificatesresolvers.le.acme.tlschallenge=true
+      # - --serversTransport.insecureSkipVerify=true
+      - --providers.docker.allowEmptyServices=true
+    ports:
+      - 80:80
+      # - 8080:8080 # porta do painel do traefik, caso queira ver todas as rotas.
+      - 443:443
+    volumes:
+      # - traefik_certificates:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock # So that Traefik can listen to the Docker events
+    networks:
+      - traefik_production
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 300M
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik_production"
+        - "traefik.http.routers.traefik.rule=Host(`teste-application.com`)"
+        - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+        - "traefik.http.routers.traefik.service=traefik"
+        - "traefik.http.routers.traefik.entrypoints=web"
+        # - "traefik.http.routers.traefik.rule=(Host(`teste-application.com`) && PathPrefix(`/traefik`))"
+
+networks:
+  traefik_production:
+    external: true
+
+# volumes:
+  # traefik_certificates:
+  #   external: true

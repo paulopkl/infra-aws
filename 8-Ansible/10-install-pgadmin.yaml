@@ -1,0 +1,19 @@
+---
+- name: Install Postgres Admin UI on Ubuntu 22.04
+  hosts: swarm_managers # Selecting the first manager from the inventory
+  become: yes
+  tasks:
+      - name: Install Postgres Admin UI
+        when: inventory_hostname == groups['swarm_managers'][0] # Run only on the first manager
+        block:
+            - name: Remove previous PG Admin stack installation
+              ignore_errors: yes
+              shell: docker stack rm pgadmin
+
+            - name: Copy docker-compose.pgadmin.yaml to the target machine
+              copy:
+                  src: ./9-pgadmin/docker-compose.pgadmin.yaml
+                  dest: ./docker-compose.pgadmin.yaml
+
+            - name: Deploy visualizer stack
+              shell: docker stack deploy --detach=false pgadmin -c ./docker-compose.pgadmin.yaml

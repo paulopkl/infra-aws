@@ -1,0 +1,38 @@
+# docker stack deploy -c docker-compose.redis.yaml redis
+
+version: "3.8"
+
+services:
+  redis:
+    restart: unless-stopped
+    container_name: redis
+    hostname: redis
+    image: 344743739159.dkr.ecr.us-east-1.amazonaws.com/redis:v1.0.0
+    command: "redis-server /usr/local/etc/redis/redis.conf"
+    # ports:
+    #   - 6379:6379
+    networks:
+      - api_network
+      - nginx_proxy_manager
+    volumes:
+      - redis_data:/data
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: "1"
+          memory: 3172M # 3Gb
+      placement:
+        constraints:
+          - node.role == worker # manager ou worker
+
+volumes:
+  redis_data:
+    # external: true
+
+networks:
+  nginx_proxy_manager:
+    external: true
+  api_network:
+    external: true

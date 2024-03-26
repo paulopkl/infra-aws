@@ -1,7 +1,7 @@
 # A security group for the ELB so it is accessible via the web
 resource "aws_security_group" "swarm_load_balancer" {
   name   = "securit-group-swarm-load-balancer"
-  vpc_id = aws_vpc.swarm.id
+  vpc_id = aws_vpc.vq.id
 
   # HTTP access from anywhere
   ingress {
@@ -33,8 +33,8 @@ resource "aws_security_group" "swarm_load_balancer" {
 # Create a security group for public subnets
 # Security Group for Manager Nodes
 resource "aws_security_group" "public_manager_nodes" {
-  name   = "tier3-public-manager-nodes"
-  vpc_id = aws_vpc.tier3.id
+  name   = "vq-public-manager-nodes"
+  vpc_id = aws_vpc.vq.id
 
   # SSH for Ansible
   ingress {
@@ -46,40 +46,77 @@ resource "aws_security_group" "public_manager_nodes" {
 
   # HTTP
   ingress {
-    protocol        = "tcp"
-    from_port       = 80
-    to_port         = 80
-    security_groups = [aws_lb.private_worker_nodes.id]
-    # cidr_blocks = ["0.0.0.0/0"]
+    protocol  = "tcp"
+    from_port = 80
+    to_port   = 80
+    # security_groups = [aws_security_group.swarm_load_balancer.id]
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  dynamic "ingress" {
+    for_each = [81, 8081, 8080]
+
+    content {
+      protocol    = "tcp"
+      from_port   = ingress.value
+      to_port     = ingress.value
+      cidr_blocks = ["0.0.0.0/0"]
+    }
   }
 
   # HTTPS
   ingress {
-    protocol        = "tcp"
-    from_port       = 443
-    to_port         = 443
-    security_groups = [aws_lb.private_worker_nodes.id]
-    # cidr_blocks = ["0.0.0.0/0"]
+    from_port = 443
+    to_port   = 443
+    protocol  = "tcp"
+    # security_groups = [aws_security_group.swarm_load_balancer.id]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Docker Swarm manager only
+  # ingress {
+  #   description = "Docker Swarm management between managers"
+  #   from_port   = 2376
+  #   to_port     = 2376
+  #   protocol    = "tcp"
+  #   # security_groups = [aws_security_group.private_worker_nodes.id]
+  #   cidr_blocks = ["0.0.0.0/0"]
+  # }
+
   ingress {
-    description     = "Docker Swarm management between managers"
-    from_port       = 2377
-    to_port         = 2377
-    protocol        = "tcp"
-    security_groups = [aws_security_group.private_worker_nodes.id]
-    # cidr_blocks = ["0.0.0.0/0"]
+    description = "Docker Swarm management between managers"
+    from_port   = 2377
+    to_port     = 2377
+    protocol    = "tcp"
+    # security_groups = [aws_security_group.private_worker_nodes.id]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
-  #   ingress {
-  #     from_port   = 0
-  #     to_port     = 0
-  #     protocol    = -1
-  #     self        = "false"
-  #     cidr_blocks = ["0.0.0.0/0"]
-  #     description = "any"
-  #   }
+  ingress {
+    description = "Docker Swarm management between managers"
+    from_port   = 4789
+    to_port     = 4789
+    protocol    = "tcp"
+    # security_groups = [aws_security_group.private_worker_nodes.id]
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Docker Swarm management between managers"
+    from_port   = 7946
+    to_port     = 7946
+    protocol    = "tcp"
+    # security_groups = [aws_security_group.private_worker_nodes.id]
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Docker Swarm management between managers"
+    from_port   = 7946
+    to_port     = 7946
+    protocol    = "udp"
+    # security_groups = [aws_security_group.private_worker_nodes.id]
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   # Allow all outbound traffic to the internet
   egress {
@@ -89,13 +126,22 @@ resource "aws_security_group" "public_manager_nodes" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = -1
+    self        = "false"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "any"
+  }
+
   tags = var.aws_tags
 }
 
 # Security Group for Worker Nodes
 resource "aws_security_group" "private_worker_nodes" {
-  name   = "tier3-private-security-group"
-  vpc_id = aws_vpc.tier3.id
+  name   = "vq-private-security-group"
+  vpc_id = aws_vpc.vq.id
 
   # SSH for Ansible
   ingress {
@@ -105,45 +151,22 @@ resource "aws_security_group" "private_worker_nodes" {
     cidr_blocks = ["0.0.0.0/0"] # var.ssh_cidr_blocks
   }
 
-  # Docker Swarm ports from this security group only
-  ingress {
-    description     = "Docker container network discovery"
-    from_port       = 7946
-    to_port         = 7946
-    protocol        = "tcp"
-    security_groups = [aws_security_group.public_manager_nodes.id]
-  }
+  # ingress {
+  #   description = "Docker Swarm management between managers"
+  #   from_port   = 2376
+  #   to_port     = 2376
+  #   protocol    = "tcp"
+  #   # security_groups = [aws_security_group.private_worker_nodes.id]
+  #   cidr_blocks = ["0.0.0.0/0"]
+  # }
 
   ingress {
-    description     = "Docker container network discovery"
-    from_port       = 7946
-    to_port         = 7946
-    protocol        = "udp"
-    security_groups = [aws_security_group.public_manager_nodes.id]
-  }
-
-  ingress {
-    description     = "Docker overlay network"
-    from_port       = 4789
-    to_port         = 4789
-    protocol        = "udp"
-    security_groups = [aws_security_group.public_manager_nodes.id]
-  }
-
-  ingress {
-    description = "Docker container network discovery"
-    from_port   = 7946
-    to_port     = 7946
+    description = "Docker Swarm management between managers"
+    from_port   = 2377
+    to_port     = 2377
     protocol    = "tcp"
-    self        = true
-  }
-
-  ingress {
-    description = "Docker container network discovery"
-    from_port   = 7946
-    to_port     = 7946
-    protocol    = "udp"
-    self        = true
+    # security_groups = [aws_security_group.private_worker_nodes.id]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
@@ -151,8 +174,42 @@ resource "aws_security_group" "private_worker_nodes" {
     from_port   = 4789
     to_port     = 4789
     protocol    = "udp"
-    self        = true
+    cidr_blocks = ["0.0.0.0/0"] # var.ssh_cidr_blocks
   }
+
+  ingress {
+    description = "Docker container network discovery"
+    from_port   = 7946
+    to_port     = 7946
+    protocol    = "tcp"
+    # security_groups = [aws_security_group.public_manager_nodes.id]
+    cidr_blocks = ["0.0.0.0/0"] # var.ssh_cidr_blocks
+  }
+
+  ingress {
+    description = "Docker container network discovery"
+    from_port   = 7946
+    to_port     = 7946
+    protocol    = "udp"
+    # security_groups = [aws_security_group.public_manager_nodes.id]
+    cidr_blocks = ["0.0.0.0/0"] # var.ssh_cidr_blocks
+  }
+
+  # ingress {
+  #   description = "Docker container network discovery"
+  #   from_port   = 7946
+  #   to_port     = 7946
+  #   protocol    = "tcp"
+  #   self        = true
+  # }
+
+  # ingress {
+  #   description = "Docker container network discovery"
+  #   from_port   = 7946
+  #   to_port     = 7946
+  #   protocol    = "udp"
+  #   self        = true
+  # }
 
   # Allow all outbound traffic to the internet
   egress {
@@ -162,13 +219,22 @@ resource "aws_security_group" "private_worker_nodes" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = -1
+    self        = "false"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "any"
+  }
+
   tags = var.aws_tags
 }
 
 # Security Group for Database
 resource "aws_security_group" "private_rabbitmq" {
   name   = "private-rabbitmq"
-  vpc_id = aws_vpc.tier3.id
+  vpc_id = aws_vpc.vq.id
 
   dynamic "ingress" {
     for_each = [22, 5672, 15672, 61613, 61614, 1883, 8883]
@@ -181,12 +247,46 @@ resource "aws_security_group" "private_rabbitmq" {
     }
   }
 
-
   ingress {
     protocol    = "tcp"
     from_port   = 5432
     to_port     = 5432
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Docker Swarm management between managers"
+    from_port   = 2376
+    to_port     = 2376
+    protocol    = "tcp"
+    # security_groups = [aws_security_group.private_worker_nodes.id]
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Docker overlay network"
+    from_port   = 4789
+    to_port     = 4789
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"] # var.ssh_cidr_blocks
+  }
+
+  ingress {
+    description = "Docker container network discovery"
+    from_port   = 7946
+    to_port     = 7946
+    protocol    = "tcp"
+    # security_groups = [aws_security_group.public_manager_nodes.id]
+    cidr_blocks = ["0.0.0.0/0"] # var.ssh_cidr_blocks
+  }
+
+  ingress {
+    description = "Docker container network discovery"
+    from_port   = 7946
+    to_port     = 7946
+    protocol    = "udp"
+    # security_groups = [aws_security_group.public_manager_nodes.id]
+    cidr_blocks = ["0.0.0.0/0"] # var.ssh_cidr_blocks
   }
 
   # Allow all outbound traffic to the internet
@@ -197,26 +297,13 @@ resource "aws_security_group" "private_rabbitmq" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = var.aws_tags
-}
-
-resource "aws_security_group" "private_database_pg" {
-  name   = "tier3-private-database-pg"
-  vpc_id = aws_vpc.tier3.id
-
   ingress {
-    protocol    = "tcp"
-    from_port   = 5432
-    to_port     = 5432
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  # Allow all outbound traffic to the internet
-  egress {
     from_port   = 0
     to_port     = 0
-    protocol    = "-1" # All protocols
+    protocol    = -1
+    self        = "false"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "any"
   }
 
   tags = var.aws_tags

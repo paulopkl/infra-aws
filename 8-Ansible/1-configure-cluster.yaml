@@ -1,0 +1,81 @@
+---
+- name: Install Docker, Docker Compose, and Docker Swarm on Ubuntu 22.04
+  hosts: swarm_managers # Selecting the first manager from the inventory
+  become: yes
+  gather_facts: yes
+  ignore_errors: true
+  tasks:
+      - name: Initialize Docker Swarm
+        become: yes
+        when: inventory_hostname == groups['swarm_managers'][0] # Run only on the first manager
+        block:
+            - name: Leave Docker Swarm first
+              command: docker swarm leave --force
+              ignore_errors: yes # Ignore error if Swarm is already initialized
+
+            - name: Initialize Docker Swarm
+              command: docker swarm init --advertise-addr {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }} --data-path-port=7789
+              register: swarm_init_output
+              changed_when: "swarm_init_output.rc != 1"
+              ignore_errors: yes
+
+            - name: Get join token for manager machine
+              command: docker swarm join-token --quiet manager
+              register: join_token_manager_output
+
+            - name: Save join token manager to file on first manager
+              set_fact:
+                  join_manager: "docker swarm join --token {{ join_token_manager_output.stdout }} {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:2377"
+
+            - name: Get join token for worker machine
+              command: docker swarm join-token --quiet worker
+              register: join_token_worker_output
+
+            - name: Save join token manager to file on first manager
+              set_fact:
+                  join_worker: "docker swarm join --token {{ join_token_worker_output.stdout }} {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:2377"
+
+      - name: Join Docker Swarm as manager
+        become: yes
+        when: inventory_hostname == groups['swarm_managers'][1] # Run on all managers except the first one
+        block:
+            - name: Managers, Leave Docker Swarm first
+              command: docker swarm leave --force
+              ignore_errors: yes
+
+            - name: Managers, Join Docker Swarm as Manager
+              shell: "{{ hostvars[groups['swarm_managers'][0]]['join_manager'] }}"
+
+      - name: Join Docker Swarm as worker
+        become: yes
+        when: inventory_hostname == groups['swarm_managers'][0] # Run only on the first manager
+        block:
+          - name: Print private IPS
+            with_items: "{{ groups['swarm_workers'] }}"
+            debug:
+              msg: "{{ item }}"
+
+          - name: Workers, Leave Docker Swarm first
+            ignore_errors: yes
+            with_items: "{{ groups['swarm_workers'] }}"
+            command: ssh -o StrictHostKeyChecking=no -i ~/.ssh/tier3-ssh.pem ubuntu@{{ item }} 'sudo docker swarm leave'
+
+          - name: Workers, Join Docker Swarm as Worker
+            ignore_errors: yes
+            with_items: "{{ groups['swarm_workers'] }}"
+            command: ssh -o StrictHostKeyChecking=no -i ~/.ssh/tier3-ssh.pem ubuntu@{{ item }} 'sudo {{ hostvars[groups['swarm_managers'][0]]['join_worker'] }}'
+
+      - name: Create all overlay networks
+        become: yes
+        when: inventory_hostname == groups['swarm_managers'][0] # Run only on the first manager
+        block:
+          - name: Create All Networks
+            ignore_errors: yes
+            shell: |
+              docker network create -d overlay traefik_production &&
+              docker network create -d overlay nginx_proxy_manager &&
+              docker network create -d overlay agent_network &&
+              docker network create -d overlay microservices &&
+              docker network create -d overlay keycloak &&
+              docker network create -d overlay api_network &&
+              docker network create -d overlay pgadmin_data

@@ -1,23 +1,57 @@
 # Define a parameter group for the RDS instance
-# resource "aws_db_parameter_group" "example" {
-#   name        = "example-parameter-group"
-#   family      = "mysql8.0"  # Specify your DB engine family
-#   description = "Parameter group for example RDS instance"
+resource "aws_db_parameter_group" "postgres_private" {
+  name        = "postgres-parameter-group"
+  family      = "postgres15"  # Specify your DB engine family
+  description = "Parameter group for PostgreSQL RDS instance"
 
-#   parameter {
-#     name  = "binlog_format"
-#     value = "ROW"
-#   }
+  # parameter {
+  #   name = "rds.force_ssl"
+  #   value = 0
+  # }
 
-#   # Add other required parameters here
-# }
+  parameter {
+    name = "log_connections"
+    value = 1
+  }
+
+  parameter {
+    name = "log_disconnections"
+    value = 1
+  }
+
+  # Add other required parameters here
+}
+
+output "sadsad" {
+  value = data.aws_subnets.private.ids
+}
+
+resource "aws_db_subnet_group" "postgres_subnet_group" {
+  name = "postgres-rds-subnet"
+  description = "DB subnet group for PostgreSQL Database"
+
+  subnet_ids = data.aws_subnets.private.ids
+  # subnet_ids = [for subnet in aws_subnet.private : subnet.id data.aws_subnets.private.ids]
+  # subnet_ids = [for subnet in aws_subnet.private : subnet.id]
+
+  tags = {
+    Name        = "PostgreSQL_Database"
+    Environment = "Prod"
+  }
+}
 
 resource "aws_db_instance" "postgresql" {
+  depends_on = [
+    aws_db_subnet_group.postgres_subnet_group,
+    # data.aws_security_group.database_security_group
+    aws_security_group.database_security_group
+  ]
+
   identifier            = "example-db-instance" # Replace with your desired identifier for the DB instance
   allocated_storage     = 10                    # Storage allocated for the DB instance (in gigabytes)
   max_allocated_storage = 100                   # Storage Auto Scale to 100 Gb
   engine                = "postgres"            # Specify PostgreSQL as the database engine
-  engine_version        = "16.2"                # Specify the PostgreSQL version
+  engine_version        = "15.2"                # Specify the PostgreSQL version
 
   instance_class = var.db_instance_type # "db.t2.micro" # Specify the instance type
 
@@ -26,14 +60,25 @@ resource "aws_db_instance" "postgresql" {
   username = var.db_username # Master username for the DB instance
   password = var.db_password # Master password for the DB instance (replace with your own secure password)
 
-  #   parameter_group_name = ""
+  # parameter_group_name = ""
   skip_final_snapshot = true
-  availability_zone   = var.db_availability_zone # "us-east-1c"
-  multi_az            = var.db_multi_az_deployment
+  # availability_zone   = var.db_availability_zone   # "us-east-1c"
+  multi_az            = var.db_multi_az_deployment # Multi region, doubles cost
 
   vpc_security_group_ids = [
+    # data.aws_security_group.database_security_group.id
     aws_security_group.database_security_group.id
   ]
+
+  # publicly_accessible = true
+
+  db_subnet_group_name = aws_db_subnet_group.postgres_subnet_group.id
+  parameter_group_name   = aws_db_parameter_group.postgres_private.name  # Associate parameter group with the instance
+
+  # Replace the following with your preferred settings
+  # backup_retention_period    = 7
+  # maintenance_window         = "Mon:00:00-Mon:01:00"
+  # backup_window              = "03:00-04:00"
 
   tags = var.aws_tags
 }

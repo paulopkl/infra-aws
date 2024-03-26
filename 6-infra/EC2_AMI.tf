@@ -7,7 +7,7 @@ data "aws_ami" "ubuntu" {
     name   = "name"
     values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20240*"]
   }
-  
+
   # filter {
   #   name = "description"
   #   values = ["Canonical, Ubuntu, 22.04 LTS, amd64 jammy image build on 2024-02-07"]
@@ -28,8 +28,4 @@ data "aws_ami" "ubuntu" {
     name   = "architecture"
     values = ["x86_64"]
   }
-}
-
-output "ami_ubuntu" {
-  value = data.aws_ami.latest-ubuntu.arn
 }

@@ -7,7 +7,7 @@ resource "aws_s3_bucket" "s3_bucket" {
 }
 
 ### PRIVATE
-resource "aws_s3_bucket_ownership_controls" "tier3" {
+resource "aws_s3_bucket_ownership_controls" "vq" {
   bucket = aws_s3_bucket.s3_bucket.id
 
   rule {
@@ -28,7 +28,7 @@ resource "aws_s3_bucket_ownership_controls" "tier3" {
 # Access control list (ACL) for the bucket, default is "private"
 resource "aws_s3_bucket_acl" "acl" {
   depends_on = [
-    aws_s3_bucket_ownership_controls.tier3
+    aws_s3_bucket_ownership_controls.vq
   ]
 
   bucket = aws_s3_bucket.s3_bucket.id

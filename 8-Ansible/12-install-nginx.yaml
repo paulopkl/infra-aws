@@ -1,0 +1,19 @@
+---
+- name: Install nginx on Ubuntu 22.04
+  hosts: swarm_managers # Selecting the first manager from the inventory
+  become: yes
+  tasks:
+      - name: Install nginx
+        when: inventory_hostname == groups['swarm_managers'][0] # Run only on the first manager
+        block:
+            - name: Remove previous Nginx stack installation
+              ignore_errors: yes
+              shell: docker stack rm nginx
+
+            - name: Copy docker-compose.nginx.yaml to the target machine
+              copy:
+                  src: ./1-nginx-proxy-manager/docker-compose.nginx.yaml
+                  dest: ./docker-compose.nginx.yaml
+
+            - name: Deploy nginx stack
+              shell: docker stack deploy --detach=false nginx -c ./docker-compose.nginx.yaml

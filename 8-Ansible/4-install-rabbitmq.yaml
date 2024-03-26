@@ -1,0 +1,19 @@
+---
+- name: Install RabbitMQ on Ubuntu 22.04
+  hosts: swarm_managers # Selecting the first manager from the inventory
+  become: yes
+  tasks:
+      - name: Install RabbitMQ
+        when: inventory_hostname == groups['swarm_managers'][0] # Run only on the first manager
+        block:
+            - name: Remove rabbitmq stack
+              ignore_errors: yes
+              shell: docker stack rm rabbitmq
+
+            - name: Copy docker-compose.rabbitmq.yaml to the target machine
+              copy:
+                  src: ./3-rabbitmq/docker-compose.rabbitmq.yaml
+                  dest: ./docker-compose.rabbitmq.yaml
+
+            - name: Deploy visualizer stack
+              shell: docker stack deploy --with-registry-auth rabbitmq -c ./docker-compose.rabbitmq.yaml

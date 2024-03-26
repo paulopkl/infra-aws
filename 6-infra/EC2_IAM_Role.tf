@@ -1,3 +1,29 @@
+# # Define IAM role for EC2 instance
+# resource "aws_iam_role" "ecr_access_role" {
+#   name               = "ec2_ecr_access_role"
+#   assume_role_policy = <<EOF
+# {
+#   "Version": "2012-10-17",
+#   "Statement": [
+#     {
+#       "Effect": "Allow",
+#       "Principal": {
+#         "Service": "ec2.amazonaws.com"
+#       },
+#       "Action": "sts:AssumeRole"
+#     }
+#   ]
+# }
+# EOF
+# }
+
+# # Attach policy granting access to ECR
+# resource "aws_iam_role_policy_attachment" "ecr_access_policy" {
+#   role       = aws_iam_role.ecr_access_role.name
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+# }
+
+
 ######## Create IAM Policies
 # Define the IAM policy
 resource "aws_iam_policy" "ecr_and_cloudtrail" {
@@ -54,7 +80,6 @@ resource "aws_iam_policy" "s3_access" {
 
   tags = var.aws_tags
 }
-########
 
 ######## Create IAM role
 resource "aws_iam_role" "ec2_role" {
@@ -64,7 +89,7 @@ resource "aws_iam_role" "ec2_role" {
     Statement = [
       {
         Effect = "Allow",
-        Action = "sts:AssumeRole"
+        Action = "sts:AssumeRole",
         Principal = {
           Service = "ec2.amazonaws.com"
         },
@@ -72,7 +97,6 @@ resource "aws_iam_role" "ec2_role" {
     ]
   })
 }
-########
 
 ######## IAM Attach Policy to Role
 # Attach IAM policies to the IAM role
@@ -85,11 +109,10 @@ resource "aws_iam_role_policy_attachment" "s3_access_attachment" {
   role       = aws_iam_role.ec2_role.name
   policy_arn = aws_iam_policy.s3_access.arn
 }
-########
 
 ######## IAM Profile Instance
 # Create IAM instance profile and associate the IAM role with it
-resource "aws_iam_instance_profile" "tier3" {
+resource "aws_iam_instance_profile" "vq" {
   name = "EC2InstanceProfile"
   role = aws_iam_role.ec2_role.name
 }

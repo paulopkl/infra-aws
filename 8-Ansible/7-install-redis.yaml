@@ -1,0 +1,15 @@
+---
+- name: Install Redis on Ubuntu 22.04
+  hosts: swarm_managers # Selecting the first manager from the inventory
+  become: yes
+  tasks:
+      - name: Install Redis
+        when: inventory_hostname == groups['swarm_managers'][0] # Run only on the first manager
+        block:
+            - name: Copy docker-compose.redis.yaml to the target machine
+              copy:
+                  src: ./6-redis/docker-compose.redis.yaml
+                  dest: ./docker-compose.redis.yaml
+
+            - name: Deploy visualizer stack
+              shell: docker stack deploy redis -c ./docker-compose.redis.yaml
